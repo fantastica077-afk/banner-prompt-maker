@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>バナープロンプトメーカー | GPT Image 2</title>
+<style>
+  :root {
+    --primary: #7c3aed;
+    --primary-light: #a78bfa;
+    --primary-dark: #6d28d9;
+    --accent: #ec4899;
+    --bg: #fafaff;
+    --surface: #ffffff;
+    --surface2: #f6f5fb;
+    --surface3: #edecf5;
+    --border: #e5e3ee;
+    --border-light: #d4d2e0;
+    --text: #1a1a2e;
+    --text-muted: #6b6b82;
+    --text-dim: #9a98ad;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 1px 2px rgba(26, 26, 46, 0.04), 0 1px 3px rgba(26, 26, 46, 0.03);
+    --shadow: 0 2px 8px rgba(26, 26, 46, 0.05), 0 4px 16px rgba(124, 58, 237, 0.04);
+    --shadow-lg: 0 8px 24px rgba(124, 58, 237, 0.08), 0 2px 8px rgba(26, 26, 46, 0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', -apple-system, sans-serif;
+    background:
+      radial-gradient(at 0% 0%, rgba(167, 139, 250, 0.12) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.08) 0px, transparent 50%),
+      var(--bg);
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  header {
+    background: rgba(255, 255, 255, 0.85);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+  }
+
+  header h1 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  header p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 28px;
+    display: grid;
+    grid-template-columns: 1fr 480px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  @media (max-width: 1024px) {
+    .container {
+      grid-template-columns: 1fr;
+      padding: 16px;
+    }
+    .output-panel { position: static !important; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #faf8ff, #f3f0ff);
+  }
+
+  .form-section {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .form-section:last-child { border-bottom: none; }
+
+  .form-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+
+  .badge-req {
+    font-size: 10px;
+    background: #fce7f3;
+    color: #be185d;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .badge-opt {
+    font-size: 10px;
+    background: var(--surface3);
+    color: var(--text-muted);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .omakase-btn {
+    margin-left: auto;
+    background: linear-gradient(135deg, #a78bfa, #ec4899);
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+    box-shadow: 0 1px 3px rgba(167, 139, 250, 0.25);
+    letter-spacing: 0.02em;
+  }
+
+  .omakase-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(167, 139, 250, 0.35);
+    filter: brightness(1.05);
+  }
+
+  .omakase-btn:active { transform: translateY(0); filter: brightness(0.95); }
+
+  @keyframes omakaseFlash {
+    0% { background: #faf5ff; box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3); }
+    100% { background: #ffffff; box-shadow: none; }
+  }
+
+  .omakase-flash {
+    animation: omakaseFlash 0.5s ease-out;
+  }
+
+  input[type="text"], textarea, select {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+
+  input[type="text"]:focus, textarea:focus, select:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+  }
+
+  input[type="text"]::placeholder, textarea::placeholder {
+    color: var(--text-dim);
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 72px;
+    line-height: 1.6;
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b6b82' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .row {
+    display: grid;
+    gap: 12px;
+  }
+  .row.col-2 { grid-template-columns: 1fr 1fr; }
+  .row.col-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* Multi-input list (USP, Badge, Icon) */
+  .multi-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .multi-item {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .multi-item input, .multi-item select {
+    flex: 1;
+  }
+
+  .multi-item .num {
+    width: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ede9fe, #fce7f3);
+    color: var(--primary);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: auto;
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .icon-btn:hover {
+    color: #ef4444;
+    border-color: #fca5a5;
+    background: #fef2f2;
+  }
+
+  .btn-add {
+    background: var(--surface2);
+    border: 1px dashed var(--border-light);
+    color: var(--text-muted);
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    margin-top: 8px;
+    width: 100%;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+
+  .btn-add:hover {
+    background: #f3f0ff;
+    border-color: var(--primary-light);
+    color: var(--primary);
+  }
+
+  .btn-add:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Toggle switch */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background: #d4d2e0;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  }
+
+  .toggle.on { background: linear-gradient(135deg, var(--primary), var(--accent)); }
+  .toggle.on::after { transform: translateX(20px); }
+
+  .toggle-label {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .hidden { display: none !important; }
+
+  /* Generate button */
+  .btn-generate {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border: none;
+    border-radius: var(--radius);
+    color: white;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3), 0 2px 6px rgba(236, 72, 153, 0.15);
+    letter-spacing: 0.02em;
+  }
+
+  .btn-generate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(124, 58, 237, 0.35), 0 4px 12px rgba(236, 72, 153, 0.2);
+  }
+
+  .btn-generate:active {
+    transform: translateY(0);
+  }
+
+  /* Output panel */
+  .output-panel {
+    position: sticky;
+    top: 100px;
+  }
+
+  .tab-bar {
+    display: flex;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    flex: 1;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-bottom: 2px solid transparent;
+  }
+
+  .tab:hover { color: var(--text); }
+
+  .tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: var(--surface);
+  }
+
+  .prompt-box {
+    padding: 16px 20px;
+    font-family: 'SF Mono', 'Menlo', 'Consolas', 'Noto Sans Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 500px;
+    overflow-y: auto;
+    color: var(--text);
+    background: #fbfaff;
+  }
+
+  .output-actions {
+    padding: 14px 20px;
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    flex: 1;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-primary:hover { background: var(--primary-dark); }
+
+  .btn-secondary {
+    background: white;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    flex: 0;
+    padding: 10px 14px;
+  }
+
+  .btn-secondary:hover {
+    color: var(--text);
+    border-color: var(--border-light);
+    background: var(--surface2);
+  }
+
+  .btn-success { background: var(--success) !important; color: white !important; }
+
+  .empty-state {
+    padding: 56px 24px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  .empty-state .emoji {
+    font-size: 44px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .empty-state p {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .stats {
+    display: flex;
+    gap: 12px;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .stat {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .stat b {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    background: var(--success);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 200;
+    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Tips card */
+  .tips-card {
+    background: linear-gradient(135deg, #faf5ff, #fef2f8);
+    border: 1px solid rgba(124, 58, 237, 0.15);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tips-card b { color: var(--primary); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 100px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  /* JSON syntax highlighting (light theme) */
+  .json-key { color: #7c3aed; font-weight: 600; }
+  .json-string { color: #059669; }
+  .json-number { color: #d97706; }
+  .json-bool { color: #db2777; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🎨</div>
+  <div>
+    <h1>バナープロンプトメーカー</h1>
+    <p>GPT Image 2 用 広告バナー専用プロンプト自動生成ツール</p>
+  </div>
+</header>
+
+<div class="container">
+  <!-- LEFT: FORM -->
+  <div>
+
+    <!-- Section 1: 基本情報 -->
+    <div class="card">
+      <div class="card-header">📝 基本情報</div>
+
+      <div class="form-section">
+        <label class="form-label">テーマ・ジャンル <span class="badge-req">必須</span></label>
+        <select id="theme">
+          <option value="">選択してください</option>
+          <option value="旅行・レジャー">旅行・レジャー</option>
+          <option value="スキンケア・美容">スキンケア・美容</option>
+          <option value="グルメ・食品">グルメ・食品</option>
+          <option value="教育・資格">教育・資格</option>
+          <option value="ファッション">ファッション</option>
+          <option value="不動産・住宅">不動産・住宅</option>
+          <option value="フィットネス・健康">フィットネス・健康</option>
+          <option value="金融・投資">金融・投資</option>
+          <option value="テクノロジー・IT">テクノロジー・IT</option>
+          <option value="エンタメ・ゲーム">エンタメ・ゲーム</option>
+          <option value="育児・ベビー">育児・ベビー</option>
+          <option value="ビジネス・SaaS">ビジネス・SaaS</option>
+          <option value="__custom__">その他（自由入力）</option>
+        </select>
+        <input type="text" id="themeCustom" placeholder="自由にテーマを入力" class="hidden" style="margin-top:8px;">
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">
+          商品名・サービス名 <span class="badge-req">必須</span>
+          <button type="button" class="omakase-btn" onclick="omakase('productName', 'productName')">🎲 おまかせ</button>
+        </label>
+        <input type="text" id="productName" placeholder="例：沖縄3日間ツアー / プレミアムクレンジング">
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">ターゲット性別</label>
+        <select id="targetGender">
+          <option value="">指定なし</option>
+          <option value="女性">女性</option>
+          <option value="男性">男性</option>
+          <option value="男女両方">男女両方</option>
+        </select>
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">サイズ（px）</label>
+        <select id="size">
+          <option value="">選択してください</option>
+          <option value="1080×1080">1080×1080 px（正方形 / Instagram 投稿）</option>
+          <option value="1080×566">1080×566 px（横長 / Facebook・SNS 横バナー）</option>
+          <option value="1080×1350">1080×1350 px（縦長 / Instagram 縦型投稿）</option>
+          <option value="1080×1920">1080×1920 px（縦型フル / ストーリーズ・リール）</option>
+          <option value="1200×1200">1200×1200 px（正方形 / 大きめSNS）</option>
+          <option value="2500×1686">2500×1686 px（LINEリッチメニュー 大）</option>
+          <option value="2500×843">2500×843 px（LINEリッチメニュー ハーフ）</option>
+          <option value="__custom__">その他（自由入力）</option>
+        </select>
+        <input type="text" id="sizeCustom" placeholder="例：1920×1080 / 728×90 など" class="hidden" style="margin-top:8px;">
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">ターゲット年代</label>
+        <select id="targetAge">
+          <option value="">指定なし</option>
+          <option value="10代">10代</option>
+          <option value="20代">20代</option>
+          <option value="30代">30代</option>
+          <option value="40代">40代</option>
+          <option value="50代">50代</option>
+          <option value="60代以上">60代以上</option>
+          <option value="20〜30代">20〜30代</option>
+          <option value="30〜40代">30〜40代</option>
+          <option value="40〜50代">40〜50代</option>
+          <option value="全年代">全年代</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Section 2: ビジュアル -->
+    <div class="card">
+      <div class="card-header">🎨 ビジュアル設定</div>
+
+      <div class="form-section">
+        <label class="form-label">
+          メインビジュアルの指定
+          <button type="button" class="omakase-btn" onclick="omakase('mainVisual', 'visuals')">🎲 おまかせ</button>
+        </label>
+        <textarea id="mainVisual" placeholder="例：白い砂浜で手をつなぎ、青く澄んだ海を眺めるカップル、空は明るい青色&#10;例：ツヤのある潤った肌をした若い女性のアップ、柔らかな自然光"></textarea>
+        <p class="hint">被写体・構図・雰囲気を具体的に記述するほど精度UP</p>
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">背景・雰囲気</label>
+        <select id="background">
+          <option value="">選択してください</option>
+          <option value="明るく爽やかな自然光、ブルースカイ">明るく爽やか（自然光・青空）</option>
+          <option value="高級感のあるゴールドと黒のラグジュアリー">高級・ラグジュアリー（金×黒）</option>
+          <option value="ポップでカラフル、明るい雰囲気">ポップ・カラフル</option>
+          <option value="ナチュラルでオーガニック、温かみのある">ナチュラル・オーガニック</option>
+          <option value="シックでダーク、洗練された大人の雰囲気">シック・ダーク</option>
+          <option value="パステルカラーでやわらかく可愛い">パステル・やわらか</option>
+          <option value="モノクロ・グレースケール">モノクロ</option>
+          <option value="鮮やかなグラデーション背景">グラデーション</option>
+          <option value="屋外の風景、自然の中">屋外・自然</option>
+          <option value="クリーンなスタジオ、白背景">スタジオ・白背景</option>
+          <option value="__custom__">その他（自由入力）</option>
+        </select>
+        <input type="text" id="backgroundCustom" placeholder="自由に雰囲気を入力" class="hidden" style="margin-top:8px;">
+      </div>
+    </div>
+
+    <!-- Section 3: コピー -->
+    <div class="card">
+      <div class="card-header">✍️ コピー（バナーに載せる文言）</div>
+
+      <div class="form-section">
+        <label class="form-label">
+          メインコピー（キャッチコピー） <span class="badge-req">必須</span>
+          <button type="button" class="omakase-btn" onclick="omakase('mainCopy', 'mainCopy')">🎲 おまかせ</button>
+        </label>
+        <input type="text" id="mainCopy" placeholder="例：今年こそ、解き放て。 / 肌、生まれ変わる。">
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">
+          サブコピー <span class="badge-opt">任意</span>
+          <button type="button" class="omakase-btn" onclick="omakase('subCopy', 'subCopy')">🎲 おまかせ</button>
+        </label>
+        <input type="text" id="subCopy" placeholder="例：3日間の癒やし旅 / 30日間でうるおい実感">
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">
+          USP（セリングポイント） <span class="badge-opt">最大6つ</span>
+          <button type="button" class="omakase-btn" onclick="omakaseUsps()">🎲 おまかせ</button>
+        </label>
+        <div class="multi-list" id="uspList"></div>
+        <button class="btn-add" id="uspAddBtn" type="button">+ USPを追加</button>
+      </div>
+    </div>
+
+    <!-- Section 4: 価格 -->
+    <div class="card">
+      <div class="card-header">💰 価格表示</div>
+      <div class="form-section">
+        <div class="toggle-row">
+          <div class="toggle on" id="priceToggle"></div>
+          <span class="toggle-label">価格を表示する</span>
+          <button type="button" class="omakase-btn" onclick="omakasePrices()">🎲 おまかせ</button>
+        </div>
+        <div id="priceFields">
+          <div class="row col-2">
+            <div>
+              <label class="form-label" style="font-size:12px;">通常価格</label>
+              <input type="text" id="priceRegular" placeholder="例：通常価格 8,980円">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:12px;">特別価格</label>
+              <input type="text" id="priceSpecial" placeholder="例：4,980円 / 初回1,980円">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 5: CTA -->
+    <div class="card">
+      <div class="card-header">🎯 CTA（行動喚起）</div>
+      <div class="form-section">
+        <div class="toggle-row">
+          <div class="toggle on" id="ctaToggle"></div>
+          <span class="toggle-label">CTAを表示する</span>
+          <button type="button" class="omakase-btn" onclick="omakase('ctaText', 'cta')">🎲 おまかせ</button>
+        </div>
+        <div id="ctaFields">
+          <label class="form-label" style="font-size:12px;">CTAマイクロコピー</label>
+          <select id="ctaPreset">
+            <option value="">プリセットから選ぶ（または下で自由入力）</option>
+            <option value="今すぐ申込">今すぐ申込</option>
+            <option value="今すぐ購入">今すぐ購入</option>
+            <option value="詳細はこちら">詳細はこちら</option>
+            <option value="無料体験する">無料体験する</option>
+            <option value="今すぐダウンロード">今すぐダウンロード</option>
+            <option value="資料請求する">資料請求する</option>
+            <option value="無料登録">無料登録</option>
+            <option value="お問い合わせ">お問い合わせ</option>
+            <option value="見積もりを取る">見積もりを取る</option>
+          </select>
+          <input type="text" id="ctaText" placeholder="例：今すぐ申込 / 詳細を見る" style="margin-top:8px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 6: バッジ・エンブレム -->
+    <div class="card">
+      <div class="card-header">🏅 バッジ・エンブレム</div>
+
+      <div class="form-section">
+        <label class="form-label">
+          バッジ <span class="badge-opt">最大3つ</span>
+          <button type="button" class="omakase-btn" onclick="omakaseBadges()">🎲 おまかせ</button>
+        </label>
+        <p class="hint" style="margin-bottom:10px; margin-top:0;">例：「初回限定」「78%OFF」「送料無料」など</p>
+        <div class="multi-list" id="badgeList"></div>
+        <button class="btn-add" id="badgeAddBtn" type="button">+ バッジを追加</button>
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">
+          権威性のエンブレム <span class="badge-opt">最大3つ</span>
+          <button type="button" class="omakase-btn" onclick="omakaseEmblems()">🎲 おまかせ</button>
+        </label>
+        <p class="hint" style="margin-bottom:10px; margin-top:0;">例：「モンドセレクション金賞」「楽天ランキング1位」「累計100万個突破」など</p>
+        <div class="multi-list" id="emblemList"></div>
+        <button class="btn-add" id="emblemAddBtn" type="button">+ エンブレムを追加</button>
+      </div>
+    </div>
+
+    <!-- Generate button -->
+    <button class="btn-generate" onclick="generate()">✨ プロンプトを生成する</button>
+  </div>
+
+  <!-- RIGHT: OUTPUT -->
+  <div class="output-panel">
+    <div class="card" style="margin-bottom:0;">
+      <div class="tab-bar">
+        <button class="tab active" data-tab="json" onclick="switchTab('json')">JSON形式</button>
+        <button class="tab" data-tab="english" onclick="switchTab('english')">英語プロンプト</button>
+        <button class="tab" data-tab="both" onclick="switchTab('both')">両方</button>
+      </div>
+
+      <div id="outputContent">
+        <div class="empty-state">
+          <span class="emoji">✨</span>
+          <p>左のフォームを入力して<br>「プロンプトを生成する」を<br>クリックしてください</p>
+        </div>
+      </div>
+
+      <div class="output-actions hidden" id="outputActions">
+        <button class="btn btn-primary" onclick="copyPrompt()" id="copyBtn">📋 コピー</button>
+        <button class="btn btn-secondary" onclick="resetAll()" title="リセット">🔄</button>
+      </div>
+    </div>
+
+    <div class="tips-card">
+      <b>💡 使い方</b><br>
+      ① 各項目を入力・選択<br>
+      ② 「プロンプトを生成する」をクリック<br>
+      ③ 生成されたプロンプトをコピー<br>
+      ④ ChatGPT（GPT Image 2）に貼り付けて画像生成<br>
+      <br>
+      <b>📝 ヒント</b><br>
+      バナーに載せる文言（メインコピー・商品名・価格・CTA）は日本語のままでOK。<br>
+      ビジュアル説明は日本語・英語どちらでも認識されます。
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ コピーしました！</div>
+
+<script>
+/* ============================================
+   状態管理
+   ============================================ */
+const state = {
+  usps: [''],
+  badges: [{ style: 'ゴールドの円形', label: '' }],
+  emblems: [{ style: '金メダル風エンブレム', label: '' }],
+  lastOutput: { json: '', english: '' },
+  currentTab: 'json',
+};
+
+const EMBLEM_STYLES = [
+  '金メダル風エンブレム',
+  '銀メダル風エンブレム',
+  '月桂樹で囲まれたエンブレム',
+  '王冠付きエンブレム',
+  'No.1 エンブレム',
+  '受賞マーク風エンブレム',
+  '認定マーク',
+  'リボン付き盾型エンブレム',
+  '星付きゴールドエンブレム',
+];
+
+/* ============================================
+   おまかせ用テンプレート（テーマ別）
+   ============================================ */
+const TEMPLATES = {
+  '旅行・レジャー': {
+    productName: ['沖縄3日間癒やしプラン', '北海道絶景ツアー', '京都古都めぐり2日間', 'ハワイ憧れリゾート', '温泉旅館宿泊プラン'],
+    mainCopy: ['今年こそ、解き放て。', '非日常へ、ひと飛び。', '旅が、心をゆるめる。', 'さあ、旅へ出よう。', '忘れられない、ひとときを。'],
+    subCopy: ['3日間の癒やし旅', '心ほどける、島時間', '早割 最大30%OFF', '絶景と美食に会いに'],
+    usps: ['航空券＋ホテル付き', '朝食無料サービス', '24時間日本語サポート', '全館Wi-Fi完備', '送迎バス付き', '現地ガイド付き', 'キャンセル無料', '人気アクティビティ込み'],
+    visuals: [
+      '白い砂浜で手をつなぎ、青く澄んだ海を眺めるカップル、空は明るい青色、左下に赤いハイビスカス',
+      '雪化粧した山々を背景に、露天風呂につかる女性の後ろ姿、湯気が立ちのぼる静謐な雰囲気',
+      '古都の町並み、朱色の鳥居が連なる参道を歩く着物姿の女性、柔らかな夕日',
+      '青い海を背景に、白いビーチパラソルとサンチェア、ヤシの木陰'
+    ],
+    priceRegular: ['通常価格 59,800円', '定価 79,800円', '通常 89,000円〜'],
+    priceSpecial: ['早割 39,800円〜', '特別 49,800円', '今だけ 29,800円'],
+    badges: ['早割対象', '送迎無料', '2名様から', '人気No.1', '限定プラン'],
+    emblems: ['楽天トラベル ランキング1位', '口コミ評価 4.8', '年間予約10万人突破', 'じゃらん人気プラン賞'],
+    cta: ['今すぐ予約', 'プランを見る', '空席を確認する'],
+  },
+  'スキンケア・美容': {
+    productName: ['プレミアムクレンジングバーム', '高保湿エッセンス', 'ナイトリペアクリーム', 'うるおい美容液'],
+    mainCopy: ['肌、生まれ変わる。', 'うるおい、その先へ。', 'わたしの、肌習慣。', '明日の肌が、楽しみになる。'],
+    subCopy: ['30日間で実感', '初回限定78%OFF', '成分にとことんこだわった', '無添加・低刺激処方'],
+    usps: ['高保湿ヒアルロン酸配合', '無添加・低刺激', '肌に優しい処方', '30日返金保証', 'ビタミンC誘導体配合', '化粧水・乳液これ1本'],
+    visuals: [
+      'ツヤのある潤った肌の若い女性のアップ、柔らかな自然光が差し込む、清潔感のある白い背景',
+      '白いテーブルに並ぶスキンケアボトルと花、朝の柔らかな光、ミニマルな構図',
+      '水滴がしたたる透明な化粧水のボトル、フレッシュで涼しげな雰囲気'
+    ],
+    priceRegular: ['通常価格 8,800円', '定価 12,000円', '通常 9,980円'],
+    priceSpecial: ['初回 1,980円', '特別価格 4,980円', '今だけ 2,980円'],
+    badges: ['初回限定78%OFF', '送料無料', '30日返金保証'],
+    emblems: ['楽天美容ランキング1位', 'モンドセレクション金賞', '顧客満足度95%'],
+    cta: ['今すぐ試す', '詳細を見る', '初回限定で購入'],
+  },
+  'グルメ・食品': {
+    productName: ['黒毛和牛贅沢ステーキ', 'こだわり海鮮セット', 'スイーツ食べ比べBOX', '名店監修お取り寄せ'],
+    mainCopy: ['とろける旨さ。', 'ひと口で、しあわせ。', '最高の、ごちそう時間。', '食卓に、笑顔を。'],
+    subCopy: ['期間限定特別価格', '産地直送', '贈り物にも最適', '限定入荷'],
+    usps: ['A5ランク黒毛和牛使用', '冷凍でお届け', '産地直送', '化粧箱入り', '送料無料', '簡単調理'],
+    visuals: [
+      '黒いグリルプレートの上で焼かれる厚切りのミディアムレアステーキ、ガーリックチップとローズマリー、ダークな背景に光る炭火',
+      '白い皿に盛られた色鮮やかな寿司の盛り合わせ、木目のテーブル、艶やかな照明',
+      '湯気の立つ土鍋料理をテーブルに並べる家族、温かく柔らかな照明'
+    ],
+    priceRegular: ['通常価格 8,980円', '定価 12,000円', '通常 6,980円'],
+    priceSpecial: ['特別価格 4,980円', '今だけ 5,980円', '初回 3,980円'],
+    badges: ['期間限定', '送料無料', 'ギフト対応'],
+    emblems: ['楽天グルメ大賞受賞', 'リピート率92%', '累計販売5万個突破'],
+    cta: ['今すぐ購入', '詳しく見る', 'ギフトで贈る'],
+  },
+  '教育・資格': {
+    productName: ['最短合格オンライン講座', 'スキルアップ動画教材', '資格取得パーフェクトコース'],
+    mainCopy: ['最短合格、その手に。', '学びが、人生を変える。', '今日から、はじめよう。', 'スキマ時間で、未来を変える。'],
+    subCopy: ['スマホで完結', '短期集中カリキュラム', '合格率90%以上', '専任講師がサポート'],
+    usps: ['スマホ・PC対応', '24時間いつでも学習', '質問し放題', '返金保証あり', 'プロ講師監修', '実績のあるカリキュラム'],
+    visuals: [
+      'スマートフォンを持つ若い社会人、カフェでリラックスして学習する様子、明るく柔らかな光',
+      '開いた本とノートパソコンが並ぶデスク、朝の爽やかな光、集中できる空間'
+    ],
+    priceRegular: ['通常価格 49,800円', '定価 69,800円'],
+    priceSpecial: ['今だけ 29,800円', '早割 39,800円'],
+    badges: ['今だけ20%OFF', '返金保証', '合格実績多数'],
+    emblems: ['受講者数10万人突破', '合格率90%', '顧客満足度No.1'],
+    cta: ['無料体験する', '資料請求', '今すぐ申込'],
+  },
+  'ファッション': {
+    productName: ['秋冬新作ニットコレクション', 'プレミアムレザーバッグ', 'モダンスニーカー'],
+    mainCopy: ['わたしの、今日を彩る。', '品格は、細部に宿る。', '自分らしく、美しく。'],
+    subCopy: ['新作入荷', '秋冬限定アイテム', 'オンライン限定', 'サイズ交換OK'],
+    usps: ['高品質素材使用', '日本製', '送料無料', 'サイズ交換可能', '世代を問わず着られる'],
+    visuals: [
+      'シンプルなグレー背景に佇む、洗練された秋冬ニットを着たモデル、柔らかな陰影',
+      '艶のあるレザーバッグが大理石のテーブルに置かれている、スタジオ照明'
+    ],
+    priceRegular: ['通常価格 19,800円', '定価 29,800円'],
+    priceSpecial: ['特別価格 12,800円', '今だけ 15,800円'],
+    badges: ['新作', '送料無料', 'サイズ交換OK'],
+    emblems: ['ファッション誌掲載多数', 'ベストセラー', 'リピート率80%'],
+    cta: ['詳細を見る', '今すぐ購入', 'コーデを見る'],
+  },
+  '不動産・住宅': {
+    productName: ['都心タワーマンション', '自然豊かな郊外戸建て', 'リノベーションマンション'],
+    mainCopy: ['ここから、はじまる暮らし。', '憧れを、現実に。', '住まいが、人生を変える。'],
+    subCopy: ['限定5邸', '駅徒歩5分', 'モデルルーム公開中'],
+    usps: ['駅徒歩5分', '最新設備完備', '全戸南向き', '24時間セキュリティ', '即日入居可'],
+    visuals: [
+      '明るい自然光が差し込むモダンなリビングダイニング、シンプルで洗練された家具、大きな窓',
+      '緑豊かな庭に面した白い外観の戸建て、爽やかな青空'
+    ],
+    priceRegular: ['販売価格 4,980万円〜', '参考価格 5,500万円'],
+    priceSpecial: ['特別価格 4,580万円〜', '先着割引 4,280万円〜'],
+    badges: ['限定5邸', '即日入居OK', '駅近'],
+    emblems: ['グッドデザイン賞受賞', '販売実績5000件', '顧客満足度4.9'],
+    cta: ['資料請求', '内覧予約', '詳細を見る'],
+  },
+  'フィットネス・健康': {
+    productName: ['パーソナルトレーニング30日コース', 'オンラインフィットネスプラン', 'ホームジム器具セット'],
+    mainCopy: ['理想のカラダへ、最短で。', '今日が、変わるきっかけ。', '続けられる、わたしのペース。'],
+    subCopy: ['初回体験無料', '月額定額制', '自宅で本格トレーニング'],
+    usps: ['専属トレーナー付き', '食事指導あり', '24時間利用可能', 'オンライン完結', '返金保証'],
+    visuals: [
+      '明るいジムでトレーニングする女性、キラキラした朝の光、清潔感のあるスタジオ',
+      'ヨガマットの上で伸びをする女性、大きな窓から差し込む柔らかな光'
+    ],
+    priceRegular: ['通常 39,800円/月', '入会金 20,000円'],
+    priceSpecial: ['初月 9,800円', '入会金0円'],
+    badges: ['初回無料', '返金保証', '月額定額'],
+    emblems: ['継続率95%', '顧客満足度No.1', '会員数10万人突破'],
+    cta: ['無料体験', '今すぐ申込', '詳細を見る'],
+  },
+  '金融・投資': {
+    productName: ['つみたてNISA入門講座', 'プロのFPによる資産相談', '投資信託おまかせプラン'],
+    mainCopy: ['お金の不安、ここで解決。', '未来を、設計しよう。', '投資、はじめてみませんか。'],
+    subCopy: ['無料相談実施中', 'プロが丁寧にサポート', 'オンラインで完結'],
+    usps: ['FP資格保有者が対応', '相談料無料', 'オンライン対応', '個別対応', '勧誘一切なし'],
+    visuals: ['ノートパソコンの前で微笑む若いカップル、明るいリビング、信頼感のある柔らかな光'],
+    priceRegular: ['通常相談料 10,000円/回', '定価 15,000円'],
+    priceSpecial: ['今なら無料', '初回 1,000円'],
+    badges: ['相談無料', '強引な勧誘なし', 'オンライン対応'],
+    emblems: ['利用者数5万人突破', '満足度4.8', 'メディア掲載多数'],
+    cta: ['無料で相談', '資料請求', '今すぐ始める'],
+  },
+  'テクノロジー・IT': {
+    productName: ['業務効率化クラウドサービス', 'AI活用ツール', 'セキュリティソリューション'],
+    mainCopy: ['業務を、もっとスマートに。', '次の一手は、AI。', '守るべきものを、確実に。'],
+    subCopy: ['導入実績1000社以上', '14日間無料トライアル', '月額980円〜'],
+    usps: ['クラウド完結', 'セキュリティ万全', '24時間サポート', '無料トライアル', '導入簡単'],
+    visuals: ['未来的なダッシュボードが表示されたノートパソコン、青と紫の光が美しい抽象的な背景'],
+    priceRegular: ['月額 9,800円', '年額 98,000円'],
+    priceSpecial: ['初月無料', '月額 980円〜'],
+    badges: ['14日間無料', '導入簡単', '24時間サポート'],
+    emblems: ['導入企業1000社', 'ITトレンド大賞受賞', '継続率98%'],
+    cta: ['無料で試す', '資料請求', '今すぐ始める'],
+  },
+  'エンタメ・ゲーム': {
+    productName: ['新作アクションゲーム', '人気配信サービス', 'オンラインイベントチケット'],
+    mainCopy: ['遊びが、熱くなる。', '夢中になる体験を。', 'さあ、冒険の時間だ。'],
+    subCopy: ['先行配信中', '月額定額で遊び放題', '期間限定開催'],
+    usps: ['ダウンロード無料', '月額定額制', 'マルチプレイ対応', '高画質対応', '日本語完全対応'],
+    visuals: ['カラフルなネオンライトが輝くサイバーパンクな都市、スタイリッシュなキャラクター'],
+    priceRegular: ['通常 1,980円/月', '定価 4,980円'],
+    priceSpecial: ['初月無料', '今だけ 980円/月'],
+    badges: ['初月無料', '期間限定', '人気No.1'],
+    emblems: ['ゲームオブザイヤー受賞', 'ダウンロード数100万突破', '評価4.9'],
+    cta: ['無料でプレイ', '今すぐダウンロード', '詳細を見る'],
+  },
+  '育児・ベビー': {
+    productName: ['オーガニックベビー服セット', 'こだわりの離乳食', 'おでかけ用ベビーカー'],
+    mainCopy: ['赤ちゃんに、やさしさを。', '毎日の笑顔のために。', '安心して、使ってほしい。'],
+    subCopy: ['無添加・国産素材', '累計販売10万個', '初めての方にも安心'],
+    usps: ['オーガニック素材', '国産・無添加', '肌にやさしい', '丁寧な手仕事', '安心の返金保証'],
+    visuals: ['柔らかな光が差し込む部屋で、お母さんと笑顔の赤ちゃん、パステルカラーの優しい雰囲気'],
+    priceRegular: ['通常価格 5,980円', '定価 7,980円'],
+    priceSpecial: ['特別 3,980円', '初回 1,980円'],
+    badges: ['オーガニック', '無添加', 'ママに人気'],
+    emblems: ['ママ大賞受賞', '累計販売10万個', '満足度96%'],
+    cta: ['詳細を見る', '今すぐ購入', 'ギフトで贈る'],
+  },
+  'ビジネス・SaaS': {
+    productName: ['業務効率化ツール', 'プロジェクト管理SaaS', 'カスタマーサポート自動化'],
+    mainCopy: ['チームを、次のステージへ。', '時間を、価値ある仕事に。', 'その業務、自動化できます。'],
+    subCopy: ['無料トライアル14日間', '導入実績3000社', '月額990円〜'],
+    usps: ['14日間無料トライアル', 'シンプル設計', '多機能連携', '24時間サポート', 'エンタープライズ対応'],
+    visuals: ['明るいオフィスで、複数のメンバーがノートパソコンを囲んで笑顔で会議している、モダンな空間'],
+    priceRegular: ['月額 5,000円/人', '年額 50,000円/人'],
+    priceSpecial: ['初月無料', '月額 990円〜'],
+    badges: ['14日間無料', '導入実績3000社', '簡単導入'],
+    emblems: ['顧客継続率98%', 'ITアワード受賞', '導入企業3000社'],
+    cta: ['無料で試す', 'デモを見る', '資料請求'],
+  },
+};
+
+const DEFAULT_TEMPLATE = {
+  productName: ['プレミアムプラン', 'スタンダードパッケージ', '選ばれる一品', 'こだわりの逸品'],
+  mainCopy: ['さあ、はじめよう。', 'あなたの選択を、確かなものに。', '今こそ、その一歩を。', '変わる、今日から。'],
+  subCopy: ['期間限定オファー', '今だけの特別価格', '選ばれる理由があります', '数量限定'],
+  usps: ['高品質', '送料無料', '満足保証', '安心のサポート', '選ばれて10年', '期間限定特典'],
+  visuals: ['洗練されたスタジオの背景に浮かぶ商品、明るい柔らかな光、ミニマルな構図'],
+  priceRegular: ['通常価格 9,800円', '定価 12,000円'],
+  priceSpecial: ['特別価格 4,980円', '今だけ 3,980円'],
+  badges: ['期間限定', '送料無料', '特別価格'],
+  emblems: ['ランキング1位', '顧客満足度No.1', '累計販売10万個突破'],
+  cta: ['今すぐ購入', '詳細を見る', '無料で試す'],
+};
+
+function getCurrentTheme() {
+  const sel = document.getElementById('theme');
+  if (!sel || sel.value === '__custom__') return null;
+  return sel.value || null;
+}
+
+function getTemplate() {
+  const theme = getCurrentTheme();
+  return (theme && TEMPLATES[theme]) || DEFAULT_TEMPLATE;
+}
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function omakase(fieldId, type) {
+  const tpl = getTemplate();
+  const pool = tpl[type] || DEFAULT_TEMPLATE[type] || [];
+  if (pool.length === 0) return;
+  const el = document.getElementById(fieldId);
+  if (!el) return;
+  el.value = pickRandom(pool);
+  el.classList.add('omakase-flash');
+  setTimeout(() => el.classList.remove('omakase-flash'), 500);
+}
+
+function omakaseUsps() {
+  const tpl = getTemplate();
+  const pool = shuffle(tpl.usps || DEFAULT_TEMPLATE.usps);
+  const count = Math.min(5, pool.length);
+  state.usps = pool.slice(0, count);
+  renderUsps();
+}
+
+function omakaseBadges() {
+  const tpl = getTemplate();
+  const pool = shuffle(tpl.badges || DEFAULT_TEMPLATE.badges);
+  const count = Math.min(3, pool.length);
+  state.badges = pool.slice(0, count).map(label => ({
+    style: pickRandom(BADGE_STYLES),
+    label,
+  }));
+  renderBadges();
+}
+
+function omakaseEmblems() {
+  const tpl = getTemplate();
+  const pool = shuffle(tpl.emblems || DEFAULT_TEMPLATE.emblems);
+  const count = Math.min(3, pool.length);
+  state.emblems = pool.slice(0, count).map(label => ({
+    style: pickRandom(EMBLEM_STYLES),
+    label,
+  }));
+  renderEmblems();
+}
+
+function omakasePrices() {
+  const tpl = getTemplate();
+  const regular = pickRandom(tpl.priceRegular || DEFAULT_TEMPLATE.priceRegular);
+  const special = pickRandom(tpl.priceSpecial || DEFAULT_TEMPLATE.priceSpecial);
+  document.getElementById('priceRegular').value = regular;
+  document.getElementById('priceSpecial').value = special;
+}
+
+const BADGE_STYLES = [
+  'ゴールドの円形',
+  '赤の円形',
+  '青の円形',
+  'オレンジの円形',
+  '黒の円形',
+  'リボン風',
+  '吹き出し型',
+  '星型',
+  '四角いシール風',
+];
+
+/* ============================================
+   USP / Badge / Icon の動的フィールド
+   ============================================ */
+function renderUsps() {
+  const list = document.getElementById('uspList');
+  list.innerHTML = state.usps.map((usp, i) => `
+    <div class="multi-item">
+      <div class="num">${i + 1}</div>
+      <input type="text" value="${escapeAttr(usp)}" placeholder="例：航空券＋ホテル付き / 高保湿成分配合" oninput="state.usps[${i}] = this.value">
+      ${state.usps.length > 1 ? `<button class="icon-btn" onclick="removeUsp(${i})" title="削除">✕</button>` : ''}
+    </div>
+  `).join('');
+  document.getElementById('uspAddBtn').disabled = state.usps.length >= 6;
+}
+
+function addUsp() {
+  if (state.usps.length < 6) {
+    state.usps.push('');
+    renderUsps();
+  }
+}
+
+function removeUsp(i) {
+  state.usps.splice(i, 1);
+  if (state.usps.length === 0) state.usps.push('');
+  renderUsps();
+}
+
+function renderBadges() {
+  const list = document.getElementById('badgeList');
+  list.innerHTML = state.badges.map((b, i) => `
+    <div class="multi-item">
+      <div class="num">${i + 1}</div>
+      <select onchange="state.badges[${i}].style = this.value" style="flex:0 0 140px;">
+        ${BADGE_STYLES.map(s => `<option value="${s}" ${b.style === s ? 'selected' : ''}>${s}</option>`).join('')}
+      </select>
+      <input type="text" value="${escapeAttr(b.label)}" placeholder="例：初回限定 / 78%OFF" oninput="state.badges[${i}].label = this.value">
+      ${state.badges.length > 1 ? `<button class="icon-btn" onclick="removeBadge(${i})" title="削除">✕</button>` : ''}
+    </div>
+  `).join('');
+  document.getElementById('badgeAddBtn').disabled = state.badges.length >= 3;
+}
+
+function addBadge() {
+  if (state.badges.length < 3) {
+    state.badges.push({ style: 'ゴールドの円形', label: '' });
+    renderBadges();
+  }
+}
+
+function removeBadge(i) {
+  state.badges.splice(i, 1);
+  if (state.badges.length === 0) state.badges.push({ style: 'ゴールドの円形', label: '' });
+  renderBadges();
+}
+
+function renderEmblems() {
+  const list = document.getElementById('emblemList');
+  list.innerHTML = state.emblems.map((e, i) => `
+    <div class="multi-item">
+      <div class="num">${i + 1}</div>
+      <select onchange="state.emblems[${i}].style = this.value" style="flex:0 0 180px;">
+        ${EMBLEM_STYLES.map(s => `<option value="${s}" ${e.style === s ? 'selected' : ''}>${s}</option>`).join('')}
+      </select>
+      <input type="text" value="${escapeAttr(e.label)}" placeholder="例：モンドセレクション金賞 / No.1 実績" oninput="state.emblems[${i}].label = this.value">
+      ${state.emblems.length > 1 ? `<button class="icon-btn" onclick="removeEmblem(${i})" title="削除">✕</button>` : ''}
+    </div>
+  `).join('');
+  document.getElementById('emblemAddBtn').disabled = state.emblems.length >= 3;
+}
+
+function addEmblem() {
+  if (state.emblems.length < 3) {
+    state.emblems.push({ style: '金メダル風エンブレム', label: '' });
+    renderEmblems();
+  }
+}
+
+function removeEmblem(i) {
+  state.emblems.splice(i, 1);
+  if (state.emblems.length === 0) state.emblems.push({ style: '金メダル風エンブレム', label: '' });
+  renderEmblems();
+}
+
+function escapeAttr(s) {
+  return (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/* ============================================
+   トグル
+   ============================================ */
+function setupToggle(id, onChange) {
+  const el = document.getElementById(id);
+  el.addEventListener('click', () => {
+    el.classList.toggle('on');
+    onChange(el.classList.contains('on'));
+  });
+}
+
+/* ============================================
+   カスタム入力欄の表示制御
+   ============================================ */
+function setupCustomField(selectId, customId) {
+  const sel = document.getElementById(selectId);
+  const custom = document.getElementById(customId);
+  sel.addEventListener('change', () => {
+    if (sel.value === '__custom__') {
+      custom.classList.remove('hidden');
+    } else {
+      custom.classList.add('hidden');
+    }
+  });
+}
+
+/* ============================================
+   プロンプト生成
+   ============================================ */
+function getVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function collectData() {
+  // テーマ
+  let theme = getVal('theme');
+  if (theme === '__custom__') theme = getVal('themeCustom');
+
+  // 背景
+  let background = getVal('background');
+  if (background === '__custom__') background = getVal('backgroundCustom');
+
+  // サイズ
+  let size = getVal('size');
+  if (size === '__custom__') size = getVal('sizeCustom');
+
+  // CTA
+  const ctaEnabled = document.getElementById('ctaToggle').classList.contains('on');
+  const ctaText = getVal('ctaPreset') || getVal('ctaText');
+
+  // 価格
+  const priceEnabled = document.getElementById('priceToggle').classList.contains('on');
+
+  return {
+    theme,
+    productName: getVal('productName'),
+    size,
+    targetGender: getVal('targetGender'),
+    targetAge: getVal('targetAge'),
+    mainVisual: getVal('mainVisual'),
+    background,
+    mainCopy: getVal('mainCopy'),
+    subCopy: getVal('subCopy'),
+    usps: state.usps.map(s => s.trim()).filter(Boolean),
+    priceEnabled,
+    priceRegular: getVal('priceRegular'),
+    priceSpecial: getVal('priceSpecial'),
+    ctaEnabled,
+    ctaText,
+    badges: state.badges.filter(b => b.label.trim()).map(b => ({ style: b.style, label: b.label.trim() })),
+    emblems: state.emblems.filter(e => e.label.trim()).map(e => ({ style: e.style, label: e.label.trim() })),
+  };
+}
+
+function buildJSON(d) {
+  // text_labels を構築
+  const textLabels = [];
+  if (d.mainCopy) textLabels.push(d.mainCopy);
+  if (d.productName) textLabels.push(d.productName);
+  if (d.subCopy) textLabels.push(d.subCopy);
+  d.usps.forEach(u => textLabels.push(u));
+  if (d.priceEnabled) {
+    if (d.priceRegular) textLabels.push(d.priceRegular);
+    if (d.priceSpecial) textLabels.push(d.priceSpecial);
+  }
+  if (d.ctaEnabled && d.ctaText) textLabels.push(d.ctaText);
+
+  // JSON構造
+  const json = {
+    type: '日本語デジタル広告バナー',
+    size: d.size ? `${d.size} px` : null,
+    theme: d.theme || null,
+    target: {
+      gender: d.targetGender || null,
+      age: d.targetAge || null,
+    },
+    subject: d.mainVisual || null,
+    background: d.background || null,
+    text_labels: textLabels,
+  };
+
+  if (d.badges.length > 0) {
+    json.badges = {
+      count: d.badges.length,
+      items: d.badges.map(b => ({ style: b.style, label: b.label })),
+    };
+  }
+
+  if (d.emblems.length > 0) {
+    json.authority_emblems = {
+      count: d.emblems.length,
+      items: d.emblems.map(e => ({ style: e.style, label: e.label })),
+    };
+  }
+
+  if (d.ctaEnabled && d.ctaText) {
+    json.cta = { enabled: true, text: d.ctaText };
+  }
+
+  // null値を削除
+  Object.keys(json).forEach(k => {
+    if (json[k] === null) delete json[k];
+  });
+  if (json.target && !json.target.gender && !json.target.age) delete json.target;
+
+  return JSON.stringify(json, null, 2);
+}
+
+function buildEnglish(d) {
+  const parts = [];
+
+  parts.push(`A professional Japanese digital advertising banner${d.theme ? ` for the ${d.theme} category` : ''}.`);
+
+  if (d.size) {
+    parts.push(`Canvas size: ${d.size} pixels.`);
+  }
+
+  if (d.targetGender || d.targetAge) {
+    const t = [];
+    if (d.targetAge) t.push(d.targetAge);
+    if (d.targetGender) t.push(d.targetGender);
+    parts.push(`Target audience: ${t.join(' ')}.`);
+  }
+
+  if (d.mainVisual) {
+    parts.push(`Main visual: ${d.mainVisual}.`);
+  }
+
+  if (d.background) {
+    parts.push(`Background and atmosphere: ${d.background}.`);
+  }
+
+  // Text labels (keep Japanese since they appear on the banner)
+  const textLabels = [];
+  if (d.mainCopy) textLabels.push(`"${d.mainCopy}" (main headline)`);
+  if (d.productName) textLabels.push(`"${d.productName}" (product name)`);
+  if (d.subCopy) textLabels.push(`"${d.subCopy}" (sub headline)`);
+  d.usps.forEach((u, i) => textLabels.push(`"${u}" (USP ${i + 1})`));
+  if (d.priceEnabled && d.priceRegular) textLabels.push(`"${d.priceRegular}" (regular price)`);
+  if (d.priceEnabled && d.priceSpecial) textLabels.push(`"${d.priceSpecial}" (special price)`);
+  if (d.ctaEnabled && d.ctaText) textLabels.push(`"${d.ctaText}" (CTA button text)`);
+
+  if (textLabels.length > 0) {
+    parts.push(`Display the following Japanese text labels clearly on the banner:\n- ${textLabels.join('\n- ')}`);
+  }
+
+  if (d.badges.length > 0) {
+    const badgeDescs = d.badges.map(b => `${b.style} badge labeled "${b.label}"`).join(', ');
+    parts.push(`Include ${d.badges.length} badge(s): ${badgeDescs}.`);
+  }
+
+  if (d.emblems.length > 0) {
+    const emblemDescs = d.emblems.map(e => `${e.style} labeled "${e.label}"`).join(', ');
+    parts.push(`Include ${d.emblems.length} authority/credibility emblem(s) to enhance trust: ${emblemDescs}.`);
+  }
+
+  parts.push('Ultra-high quality commercial banner design, sharp typography, professional composition, visually balanced layout, eye-catching and persuasive.');
+
+  return parts.join('\n\n');
+}
+
+function validate(d) {
+  const errors = [];
+  if (!d.theme) errors.push('テーマ・ジャンル');
+  if (!d.productName) errors.push('商品名');
+  if (!d.mainCopy) errors.push('メインコピー');
+  return errors;
+}
+
+function generate() {
+  const d = collectData();
+  const errors = validate(d);
+  if (errors.length > 0) {
+    alert('以下の必須項目を入力してください：\n\n・' + errors.join('\n・'));
+    return;
+  }
+
+  state.lastOutput.json = buildJSON(d);
+  state.lastOutput.english = buildEnglish(d);
+
+  renderOutput();
+  document.getElementById('outputActions').classList.remove('hidden');
+
+  // 出力エリアまでスクロール（モバイル用）
+  if (window.innerWidth < 1024) {
+    document.querySelector('.output-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function renderOutput() {
+  const tab = state.currentTab;
+  const container = document.getElementById('outputContent');
+
+  let content = '';
+  let chars = 0;
+
+  if (tab === 'json') {
+    content = `<div class="stats"><span class="stat">形式: <b>JSON</b></span><span class="stat">文字数: <b>${state.lastOutput.json.length}</b></span></div><pre class="prompt-box" id="promptBox">${highlightJSON(state.lastOutput.json)}</pre>`;
+  } else if (tab === 'english') {
+    content = `<div class="stats"><span class="stat">形式: <b>英語</b></span><span class="stat">文字数: <b>${state.lastOutput.english.length}</b></span></div><pre class="prompt-box" id="promptBox">${escapeHtml(state.lastOutput.english)}</pre>`;
+  } else {
+    const combined = '# JSON形式\n\n' + state.lastOutput.json + '\n\n---\n\n# 英語プロンプト\n\n' + state.lastOutput.english;
+    content = `<div class="stats"><span class="stat">形式: <b>両方</b></span><span class="stat">文字数: <b>${combined.length}</b></span></div><pre class="prompt-box" id="promptBox">${escapeHtml(combined)}</pre>`;
+  }
+
+  container.innerHTML = content;
+}
+
+function switchTab(tab) {
+  state.currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  if (state.lastOutput.json) {
+    renderOutput();
+  }
+}
+
+function highlightJSON(json) {
+  return escapeHtml(json)
+    .replace(/(&quot;[^&]+?&quot;)(\s*:)/g, '<span class="json-key">$1</span>$2')
+    .replace(/:\s*(&quot;[^&]*?&quot;)/g, ': <span class="json-string">$1</span>')
+    .replace(/:\s*(\d+)/g, ': <span class="json-number">$1</span>')
+    .replace(/:\s*(true|false|null)/g, ': <span class="json-bool">$1</span>');
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* ============================================
+   コピー・リセット
+   ============================================ */
+function copyPrompt() {
+  const tab = state.currentTab;
+  let text = '';
+  if (tab === 'json') text = state.lastOutput.json;
+  else if (tab === 'english') text = state.lastOutput.english;
+  else text = '# JSON形式\n\n' + state.lastOutput.json + '\n\n---\n\n# 英語プロンプト\n\n' + state.lastOutput.english;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast();
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✅ コピー済み！';
+    btn.classList.add('btn-success');
+    setTimeout(() => {
+      btn.textContent = '📋 コピー';
+      btn.classList.remove('btn-success');
+    }, 2000);
+  });
+}
+
+function showToast() {
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function resetAll() {
+  if (!confirm('入力内容をすべてリセットしますか？')) return;
+
+  document.querySelectorAll('input[type="text"], textarea').forEach(el => el.value = '');
+  document.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+  document.getElementById('themeCustom').classList.add('hidden');
+  document.getElementById('backgroundCustom').classList.add('hidden');
+  document.getElementById('sizeCustom').classList.add('hidden');
+  document.getElementById('priceToggle').classList.add('on');
+  document.getElementById('ctaToggle').classList.add('on');
+  document.getElementById('priceFields').classList.remove('hidden');
+  document.getElementById('ctaFields').classList.remove('hidden');
+
+  state.usps = [''];
+  state.badges = [{ style: 'ゴールドの円形', label: '' }];
+  state.emblems = [{ style: '金メダル風エンブレム', label: '' }];
+  state.lastOutput = { json: '', english: '' };
+
+  renderUsps();
+  renderBadges();
+  renderEmblems();
+
+  document.getElementById('outputContent').innerHTML = `
+    <div class="empty-state">
+      <span class="emoji">✨</span>
+      <p>左のフォームを入力して<br>「プロンプトを生成する」を<br>クリックしてください</p>
+    </div>`;
+  document.getElementById('outputActions').classList.add('hidden');
+}
+
+/* ============================================
+   初期化
+   ============================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderUsps();
+  renderBadges();
+  renderEmblems();
+
+  document.getElementById('uspAddBtn').addEventListener('click', addUsp);
+  document.getElementById('badgeAddBtn').addEventListener('click', addBadge);
+  document.getElementById('emblemAddBtn').addEventListener('click', addEmblem);
+
+  setupCustomField('theme', 'themeCustom');
+  setupCustomField('background', 'backgroundCustom');
+  setupCustomField('size', 'sizeCustom');
+
+  setupToggle('priceToggle', on => {
+    document.getElementById('priceFields').classList.toggle('hidden', !on);
+  });
+
+  setupToggle('ctaToggle', on => {
+    document.getElementById('ctaFields').classList.toggle('hidden', !on);
+  });
+
+  // CTA プリセット選択時にテキストに反映
+  document.getElementById('ctaPreset').addEventListener('change', (e) => {
+    if (e.target.value) {
+      document.getElementById('ctaText').value = e.target.value;
+    }
+  });
+});
+</script>
+
+</body>
+</html>
